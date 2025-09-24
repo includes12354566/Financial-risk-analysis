@@ -1,0 +1,60 @@
+# 该脚本的作用：定义多容器服务编排
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: risk_analysis_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-risk_analysis_2024}
+      MYSQL_DATABASE: risk_analysis_system
+      MYSQL_USER: risk_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-risk_password_2024}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: risk_analysis_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: risk_analysis_app
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=risk_user
+      - DB_PASSWORD=${MYSQL_PASSWORD:-risk_password_2024}
+      - DB_NAME=risk_analysis_system
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - mysql
+      - redis
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: risk_analysis_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./frontend:/usr/share/nginx/html
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

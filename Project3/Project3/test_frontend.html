@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API测试页面</h1>
+    
+    <div class="test-section">
+        <h2>1. 健康检查</h2>
+        <button onclick="testHealth()">测试健康检查</button>
+        <div id="healthResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 系统统计</h2>
+        <button onclick="testStats()">测试系统统计</button>
+        <div id="statsResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 风险分析查询</h2>
+        <button onclick="testRiskAnalysis()">测试风险分析</button>
+        <div id="riskResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 前端页面测试</h2>
+        <button onclick="openMainPage()">打开主页面</button>
+        <div id="mainPageResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ 健康检查成功: ${JSON.stringify(data)}</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 健康检查失败: ${error.message}</div>`;
+            }
+        }
+        
+        async function testStats() {
+            const resultDiv = document.getElementById('statsResult');
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">✅ 系统统计成功: ${JSON.stringify(data)}</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 系统统计失败: ${error.message}</div>`;
+            }
+        }
+        
+        async function testRiskAnalysis() {
+            const resultDiv = document.getElementById('riskResult');
+            try {
+                const response = await fetch(`${API_BASE}/api/risk-analysis`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        time_range: '30d',
+                        min_metric_a: 1,
+                        min_metric_b: 1,
+                        max_metric_c: 0
+                    })
+                });
+                const data = await response.json();
+                const count = data.transactions ? data.transactions.length : 0;
+                resultDiv.innerHTML = `<div class="success">✅ 风险分析查询成功: ${count} 条记录</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 风险分析查询失败: ${error.message}</div>`;
+            }
+        }
+        
+        function openMainPage() {
+            const resultDiv = document.getElementById('mainPageResult');
+            try {
+                window.open('frontend/index.html', '_blank');
+                resultDiv.innerHTML = `<div class="info">ℹ 已打开主页面，请检查是否正常显示</div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 打开主页面失败: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
+
